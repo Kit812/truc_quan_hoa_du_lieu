@@ -51,13 +51,13 @@ st.markdown("""
 @st.cache_data
 def load_data():
     try:
-        # Đọc trực tiếp từ tập dữ liệu mẫu của nhóm [cite: 280]
+        # Đọc trực tiếp từ tập dữ liệu mẫu của nhóm
         df = pd.read_csv("SampleSuperstore.csv")
     except FileNotFoundError:
         st.error("Không tìm thấy file 'SampleSuperstore.csv'. Hãy đảm bảo file nằm cùng thư mục với file app.py này!")
         st.stop()
         
-    # Chuẩn hóa khoảng trắng cho dữ liệu dạng chuỗi như báo cáo mô tả [cite: 305]
+    # Chuẩn hóa khoảng trắng cho dữ liệu dạng chuỗi như báo cáo mô tả
     string_cols = ['Ship Mode', 'Segment', 'Region', 'Category', 'Sub-Category', 'State']
     for col in string_cols:
         if col in df.columns:
@@ -67,7 +67,7 @@ def load_data():
 
 df = load_data()
 
-# Lấy danh sách các giá trị duy nhất để làm cấu hình mặc định cho bộ lọc [cite: 194]
+# Lấy danh sách các giá trị duy nhất để làm cấu hình mặc định cho bộ lọc
 list_regions = sorted(df['Region'].unique())
 list_segments = sorted(df['Segment'].unique())
 list_categories = sorted(df['Category'].unique())
@@ -95,16 +95,16 @@ def reset_all_filters():
 # ==============================================================================
 st.sidebar.header("Bộ Lọc Hệ Thống")
 
-# Khởi tạo các bộ lọc gắn liền với session_state thông qua thuộc tính key [cite: 436, 439]
+# Khởi tạo các bộ lọc gắn liền với session_state thông qua thuộc tính key
 region_sel = st.sidebar.multiselect("Khu vực (Region)", options=list_regions, key='region_filter')
 segment_sel = st.sidebar.multiselect("Phân khúc (Segment)", options=list_segments, key='segment_filter')
 category_sel = st.sidebar.multiselect("Danh mục (Category)", options=list_categories, key='category_filter')
 ship_sel = st.sidebar.multiselect("Phương thức vận chuyển (Ship Mode)", options=list_ships, key='ship_filter')
 
-# Nút Reset bộ lọc ở phía bên trái thanh Sidebar - Gọi hàm reset_all_filters khi click [cite: 441]
+# Nút Reset bộ lọc ở phía bên trái thanh Sidebar - Gọi hàm reset_all_filters khi click
 st.sidebar.button("Reset Bộ Lọc", on_click=reset_all_filters, use_container_width=True)
 
-# Áp dụng bộ lọc động vào dữ liệu [cite: 437]
+# Áp dụng bộ lọc động vào dữ liệu
 df_filtered = df[
     (df['Region'].isin(region_sel)) &
     (df['Segment'].isin(segment_sel)) &
@@ -112,14 +112,14 @@ df_filtered = df[
     (df['Ship Mode'].isin(ship_sel))
 ]
 
-# Tính toán các chỉ số cốt lõi (KPIs) [cite: 428]
+# Tính toán các chỉ số cốt lõi (KPIs)
 total_sales = df_filtered['Sales'].sum() if not df_filtered.empty else 0
 total_profit = df_filtered['Profit'].sum() if not df_filtered.empty else 0
 profit_margin = (total_profit / total_sales * 100) if total_sales > 0 else 0
 total_orders = len(df_filtered)
 avg_discount = (df_filtered['Discount'].mean() * 100) if not df_filtered.empty else 0
 
-# Tự động chuyển đổi màu sắc biên lợi nhuận để cảnh báo rủi ro [cite: 430]
+# Tự động chuyển đổi màu sắc biên lợi nhuận để cảnh báo rủi ro
 if profit_margin < 10:
     margin_color = "#DC2626"   # Đỏ rủi ro cao
 elif profit_margin <= 20:
@@ -133,7 +133,7 @@ else:
 st.title("📊 Hệ Thống Phân Tích & Trực Quan Hóa Dữ Liệu Bán Hàng Superstore")
 st.caption("Đồ án môn học Trực quan hóa dữ liệu — Nhóm 14 — Lớp D22CNTT06 — GVHD: TS. Lê Thị Thùy Trang")
 
-# ---- TẦNG 1: HỆ THỐNG THỂ KPI HIỆN ĐẠI (Đồng bộ thông tin tổng quan) [cite: 426] ----
+# ---- TẦNG 1: HỆ THỐNG THỂ KPI HIỆN ĐẠI (Đồng bộ thông tin tổng quan) ----
 kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
 with kpi1:
@@ -163,14 +163,14 @@ tab_sales, tab_segments, tab_advanced = st.tabs([
 ])
 
 # ==============================================================================
-# TAB 1: XU HƯỚNG & KHU VỰC (CƠ BẢN) - KHUNG MÀN HÌNH 1 [cite: 336]
+# TAB 1: XU HƯỚNG & KHU VỰC (CƠ BẢN) - KHUNG MÀN HÌNH 1
 # ==============================================================================
 with tab_sales:
     st.markdown("### Phân Tích Xu Hướng Bang Và Khu Vực")
     col1, col2 = st.columns(2)
     
     with col1:
-        # Biểu đồ 1: Line Graph - Top 10 bang có doanh thu cao nhất [cite: 339, 340]
+        # Biểu đồ 1: Line Graph - Top 10 bang có doanh thu cao nhất
         state_sales = df_filtered.groupby('State')['Sales'].sum().reset_index()
         top10_states = state_sales.sort_values(by='Sales', ascending=False).head(10)
         
@@ -187,7 +187,7 @@ with tab_sales:
         st.plotly_chart(fig_line, use_container_width=True)
         
     with col2:
-        # Biểu đồ 2: Stacked Bar Chart - Doanh thu theo khu vực và danh mục sản phẩm [cite: 361, 362]
+        # Biểu đồ 2: Stacked Bar Chart - Doanh thu theo khu vực và danh mục sản phẩm
         region_cat_sales = df_filtered.groupby(['Region', 'Category'])['Sales'].sum().reset_index()
         
         fig_stacked = px.bar(
@@ -201,14 +201,14 @@ with tab_sales:
         st.plotly_chart(fig_stacked, use_container_width=True)
 
 # ==============================================================================
-# TAB 2: PHÂN KHÚC & TƯƠNG QUAN (CƠ BẢN) - KHUNG MÀN HÌNH 2 [cite: 336]
+# TAB 2: PHÂN KHÚC & TƯƠNG QUAN (CƠ BẢN) - KHUNG MÀN HÌNH 2
 # ==============================================================================
 with tab_segments:
     st.markdown("### Phân Tích Khách Hàng Và Biến Động Chiết Khấu")
     col_seg1, col_seg2 = st.columns(2)
     
     with col_seg1:
-        # Biểu đồ 3: Pie Chart - Tỷ trọng doanh thu theo phân khúc khách hàng [cite: 350, 351]
+        # Biểu đồ 3: Pie Chart - Tỷ trọng doanh thu theo phân khúc khách hàng
         segment_sales = df_filtered.groupby('Segment')['Sales'].sum().reset_index()
         
         fig_pie = px.pie(
@@ -221,7 +221,7 @@ with tab_segments:
         st.plotly_chart(fig_pie, use_container_width=True)
         
     with col_seg2:
-        # Biểu đồ 4: Scatter Plot - Mối liên hệ giữa Doanh thu, Lợi nhuận và Chiết khấu [cite: 372, 373]
+        # Biểu đồ 4: Scatter Plot - Mối liên hệ giữa Doanh thu, Lợi nhuận và Chiết khấu
         fig_scatter = px.scatter(
             df_filtered, x='Sales', y='Profit', color='Discount', opacity=0.6,
             title="Tương Quan Phân Kỳ Giữa Doanh Thu, Lợi Nhuận Và Tỷ Lệ Chiết Khấu",
@@ -233,12 +233,12 @@ with tab_segments:
         st.plotly_chart(fig_scatter, use_container_width=True)
 
 # ==============================================================================
-# TAB 3: HỆ THỐNG BIỂU ĐỒ NÂNG CAO (ĐÃ THAY ĐỔI SCALE CHIỀU CAO THEO CHẾ ĐỘ XEM) [cite: 382]
+# TAB 3: HỆ THỐNG BIỂU ĐỒ NÂNG CAO (ĐÃ ĐƯỢC PHÓNG TO SCALE CHO HEATMAP)
 # ==============================================================================
 with tab_advanced:
     st.markdown("### Định Vị Rủi Ro Và Phân Cấp Lợi Nhuận")
     
-    # Bộ lọc radio cho phép mở rộng không gian hiển thị cho biểu đồ lớn [cite: 456]
+    # Bộ lọc radio cho phép mở rộng không gian hiển thị cho biểu đồ lớn
     view_option = st.radio(
         "**Tùy chọn hiển thị biểu đồ nâng cao:**",
         options=["Xem Heatmap", "Xem Treemap", "Xem song song Heatmap và Treemap"],
@@ -248,17 +248,17 @@ with tab_advanced:
     st.write("---")
     
     if not df_filtered.empty:
-        # Khởi tạo ma trận dữ liệu nâng cao [cite: 385, 397]
+        # Khởi tạo ma trận dữ liệu nâng cao
         pivot_heatmap = df_filtered.pivot_table(index='Region', columns='Category', values='Profit', aggfunc='mean').round(2)
         df_tree = df_filtered.groupby(['Category', 'Sub-Category']).agg({'Sales': 'sum', 'Profit': 'sum'}).reset_index()
         
-        # Điều phối bố cục hiển thị và SCALE kích thước tương ứng dựa trên bộ lọc đã chọn [cite: 456]
+        # Điều phối bố cục hiển thị và SCALE kích thước tương ứng dựa trên bộ lọc đã chọn
         if view_option == "Xem Heatmap":
             fig_heatmap = px.imshow(
                 pivot_heatmap, text_auto='.2f', color_continuous_scale='RdYlGn',  
                 title="Heatmap: Chỉ Số Lợi Nhuận Trung Bình Theo Vùng Và Ngành Hàng",
                 labels=dict(x="Danh Mục Sản Phẩm", y="Khu Vực", color="Lợi Nhuận TB ($)"),
-                height=450 
+                height=650 # ĐÃ TĂNG SCALE từ 450px lên 650px giúp ma trận hiển thị to, rõ nét hẳn ra
             )
             st.plotly_chart(fig_heatmap, use_container_width=True)
             
