@@ -107,7 +107,6 @@ if st.sidebar.button("🔄 Khởi động lại bộ lọc"):
 # ==========================================
 # 4. HỆ THỐNG PHÂN PHÁP TAB CHUYÊN NGHIỆP
 # ==========================================
-# Chia Dashboard làm 3 Tab nội dung rõ ràng
 tab_kpi, tab_diagnostic, tab_audit = st.tabs([
     "📈 Phân Hệ 1: Hiệu Suất Tổng Quan", 
     "🔍 Phân Hệ 2: Chẩn Đoán & Phát Hiện Rủi Ro Lỗ/Lãi", 
@@ -120,7 +119,6 @@ tab_kpi, tab_diagnostic, tab_audit = st.tabs([
 with tab_kpi:
     st.markdown("#### 📌 Báo cáo Sức khỏe Doanh nghiệp (Thống kê Mô tả)")
     
-    # Khu vực KPI Cards thu gọn
     t_sales = filtered_df['Sales'].sum()
     t_profit = filtered_df['Profit'].sum()
     p_margin = (t_profit / t_sales) * 100 if t_sales > 0 else 0
@@ -137,7 +135,6 @@ with tab_kpi:
     
     st.markdown("---")
     
-    # Chỉ để 3 biểu đồ cơ bản nhất ở trang này để giữ không gian thoáng
     col1_1, col1_2 = st.columns(2)
     with col1_1:
         st.markdown("##### Phân phối Doanh thu theo Khu vực địa lý & Danh mục")
@@ -157,31 +154,77 @@ with tab_kpi:
     st.plotly_chart(fig_line, use_container_width=True)
 
 # ------------------------------------------
-# TAB 2: CHẨN ĐOÁN & PHÁT HIỆN RỦI RO LỖ/LÃI (DIAGNOSTIC INSIGHTS)
+# TAB 2: CHẨN ĐOÁN & PHÁT HIỆN RỦI RO (MENU TÙY CHỌN GIAO DIỆN PHÓNG TO)
 # ------------------------------------------
 with tab_diagnostic:
     st.markdown("#### 📌 Phân tích chẩn đoán chuyên sâu nguyên nhân thua lỗ")
-    st.caption("Trang phân tích này tập trung ứng dụng các biểu đồ cấu trúc nâng cao để dò tìm các điểm nóng (Hotspots) ảnh hưởng tiêu cực đến dòng tiền.")
+    st.caption("Ứng dụng cấu trúc phân cấp trực quan để dò tìm các điểm nóng (Hotspots) ảnh hưởng tiêu cực đến dòng tiền.")
     
-    col2_1, col2_2 = st.columns(2)
-    with col2_1:
-        st.markdown("##### Ma trận nhiệt (Heatmap): Hiệu suất sinh lời trung bình (Region vs Category)")
-        heat_data = filtered_df.groupby(['Region', 'Category'])['Profit'].mean().reset_index()
-        heat_pivot = heat_data.pivot(index='Region', columns='Category', values='Profit')
-        fig_heatmap = px.imshow(heat_pivot, color_continuous_scale='RdYlGn', color_continuous_midpoint=0, text_auto=".1f")
-        st.plotly_chart(fig_heatmap, use_container_width=True)
-        
-    with col2_2:
-        st.markdown("##### Biểu đồ phân cấp Cây (Treemap): Cơ cấu rủi ro theo Danh mục phụ")
-        fig_treemap = px.treemap(filtered_df, path=['Category', 'Sub-Category'], values='Sales', color='Profit', color_continuous_scale='RdYlGn', color_continuous_midpoint=0)
-        fig_treemap.update_traces(hovertemplate="<b>Phân loại:</b> %{label}<br><b>Doanh thu:</b> $%{value:,.2f}<br><b>Lợi nhuận:</b> $%{color:,.2f}<extra></extra>")
-        st.plotly_chart(fig_treemap, use_container_width=True)
-        
+    # 🌟 MENU CẢI TIẾN: Lựa chọn chế độ hiển thị biểu đồ để tối ưu không gian rộng rãi
     st.markdown("---")
-    st.markdown("##### Mô hình phân tán: Tác động biên của chính sách Chiết khấu (Discount) đến Lợi nhuận (Profit)")
+    view_mode = st.radio(
+        "🖥️ **Chế độ hiển thị không gian phân tích:**",
+        options=[
+            "📱 Hiển thị thu gọn (Xem song song tất cả biểu đồ)", 
+            "📈 Chỉ phóng to Ma trận nhiệt (Heatmap)", 
+            "🌳 Chỉ phóng to Biểu đồ cây phân cấp (Treemap)",
+            "🎯 Chỉ phóng to Mô hình phân tán Chiết khấu (Scatter Plot)"
+        ],
+        horizontal=True
+    )
+    st.markdown("---")
+    
+    # Khởi tạo sẵn các đối tượng biểu đồ nâng cao để gọi hiển thị động
+    # 1. Định nghĩa Heatmap
+    heat_data = filtered_df.groupby(['Region', 'Category'])['Profit'].mean().reset_index()
+    heat_pivot = heat_data.pivot(index='Region', columns='Category', values='Profit')
+    fig_heatmap = px.imshow(heat_pivot, color_continuous_scale='RdYlGn', color_continuous_midpoint=0, text_auto=".1f")
+    fig_heatmap.update_layout(height=450) # Tự động giãn chiều cao khi xem diện rộng
+    
+    # 2. Định nghĩa Treemap
+    fig_treemap = px.treemap(filtered_df, path=['Category', 'Sub-Category'], values='Sales', color='Profit', color_continuous_scale='RdYlGn', color_continuous_midpoint=0)
+    fig_treemap.update_traces(hovertemplate="<b>Phân loại:</b> %{label}<br><b>Doanh thu:</b> $%{value:,.2f}<br><b>Lợi nhuận:</b> $%{color:,.2f}<extra></extra>")
+    fig_treemap.update_layout(height=450)
+    
+    # 3. Định nghĩa Scatter Plot
     fig_scatter = px.scatter(filtered_df, x='Sales', y='Profit', color='Discount', color_continuous_scale='RdYlGn', opacity=0.5)
-    fig_scatter.add_hline(y=0, line_dash="dash", line_color="black", annotation_text="Đường hòa vốn (Profit = 0)")
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    fig_scatter.add_hline(y=0, line_dash="dash", line_color="black")
+    fig_scatter.update_layout(height=500)
+
+    # ĐIỀU HƯỚNG HIỂN THỊ ĐỘNG THEO MENU LỰA CHỌN USER
+    if view_mode == "📱 Hiển thị thu gọn (Xem song song tất cả biểu đồ)":
+        # Chế độ cũ chia đôi màn hình
+        col2_1, col2_2 = st.columns(2)
+        with col2_1:
+            st.markdown("##### Ma trận nhiệt (Heatmap): Hiệu suất sinh lời trung bình (Region vs Category)")
+            st.plotly_chart(fig_heatmap, use_container_width=True)
+        with col2_2:
+            st.markdown("##### Biểu đồ phân cấp Cây (Treemap): Cơ cấu rủi ro theo Danh mục phụ")
+            st.plotly_chart(fig_treemap, use_container_width=True)
+            
+        st.markdown("---")
+        st.markdown("##### Mô hình phân tán: Tác động biên của chính sách Chiết khấu (Discount) đến Lợi nhuận (Profit)")
+        st.plotly_chart(fig_scatter, use_container_width=True)
+        
+    elif view_mode == "📈 Chỉ phóng to Ma trận nhiệt (Heatmap)":
+        # Chế độ phóng to full trang cho Heatmap
+        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO TOÀN TRANG] Ma trận nhiệt (Heatmap): Hiệu suất sinh lời trung bình")
+        fig_heatmap.update_layout(height=600) # Ép chiều cao rộng ra để đọc chữ cực rõ
+        st.plotly_chart(fig_heatmap, use_container_width=True)
+        st.info("💡 **Gợi ý phân tích:** Chế độ phóng to giúp bạn nhìn rõ các giá trị số Lợi nhuận trung bình trên từng ô. Hãy chú ý vùng giao thoa giữa miền **Central** và danh mục **Furniture** đang mang giá trị âm sâu nhất.")
+        
+    elif view_mode == "🌳 Chỉ phóng to Biểu đồ cây phân cấp (Treemap)":
+        # Chế độ phóng to full trang cho Treemap
+        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO TOÀN TRANG] Biểu đồ phân cấp Cây (Treemap): Phân tích lát cắt Doanh thu & Lợi nhuận")
+        fig_treemap.update_layout(height=600)
+        st.plotly_chart(fig_treemap, use_container_width=True)
+        st.info("💡 **Gợi ý phân tích:** Kích thước ô đại diện cho Doanh thu (Sales). Ô sản phẩm **Tables** tuy chiếm diện tích lớn (Doanh thu cao) nhưng bị nhuộm sắc đỏ đậm, chứng tỏ đây là sản phẩm rủi ro trọng điểm cần thu hẹp quy mô chiết khấu.")
+        
+    elif view_mode == "🎯 Chỉ phóng to Mô hình phân tán Chiết khấu (Scatter Plot)":
+        # Chế độ phóng to full trang cho Scatter Plot
+        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO TOÀN TRANG] Mô hình phân tán: Tác động biên của chính sách Chiết khấu")
+        fig_scatter.update_layout(height=650)
+        st.plotly_chart(fig_scatter, use_container_width=True)
 
 # ------------------------------------------
 # TAB 3: ĐỐI SOÁT DỮ LIỆU GIAO DỊCH CHI TIẾT (DATA AUDIT LOG)
