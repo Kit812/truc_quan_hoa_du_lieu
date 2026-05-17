@@ -51,7 +51,7 @@ st.markdown("""
 @st.cache_data
 def load_data():
     try:
-        # Đọc trực tiếp từ file CSV bạn đã tải lên
+        # Đọc trực tiếp từ tập dữ liệu mẫu của nhóm
         df = pd.read_csv("SampleSuperstore.csv")
     except FileNotFoundError:
         st.error("Không tìm thấy file 'SampleSuperstore.csv'. Hãy đảm bảo file nằm cùng thư mục với file app.py này!")
@@ -72,7 +72,7 @@ df = load_data()
 # ==============================================================================
 st.sidebar.header("Bộ Lọc Hệ Thống")
 
-# Khởi tạo các bộ lọc đa chọn (Mặc định chọn tất cả để tránh màn hình trống)
+# Khởi tạo các bộ lọc đa chọn (Mặc định chọn tất cả)
 region_sel = st.sidebar.multiselect("Khu vực (Region)", options=sorted(df['Region'].unique()), default=df['Region'].unique())
 segment_sel = st.sidebar.multiselect("Phân khúc (Segment)", options=sorted(df['Segment'].unique()), default=df['Segment'].unique())
 category_sel = st.sidebar.multiselect("Danh mục (Category)", options=sorted(df['Category'].unique()), default=df['Category'].unique())
@@ -93,7 +93,7 @@ profit_margin = (total_profit / total_sales * 100) if total_sales > 0 else 0
 total_orders = len(df_filtered)
 avg_discount = (df_filtered['Discount'].mean() * 100) if not df_filtered.empty else 0
 
-# Tự động chuyển đổi màu sắc biên lợi nhuận để cảnh báo rủi ro (Mục 4.2.2)
+# Tự động chuyển đổi màu sắc biên lợi nhuận để cảnh báo rủi ro
 if profit_margin < 10:
     margin_color = "#DC2626"   # Đỏ rủi ro cao
 elif profit_margin <= 20:
@@ -107,7 +107,7 @@ else:
 st.title("📊 Hệ Thống Phân Tích & Trực Quan Hóa Dữ Liệu Bán Hàng Superstore")
 st.caption("Đồ án môn học Trực quan hóa dữ liệu — Nhóm 14 — Lớp D22CNTT06 — GVHD: TS. Lê Thị Thùy Trang")
 
-# ---- TẦNG 1: HỆ THỐNG THẺ KPI HIỆN ĐẠI (Đồng bộ thông tin tổng quan) ----
+# ---- TẦNG 1: HỆ THỐNG THỂ KPI HIỆN ĐẠI (Đồng bộ thông tin tổng quan) ----
 kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
 with kpi1:
@@ -124,12 +124,12 @@ with kpi4:
     st.markdown(f"<div class='kpi-card'><div class='kpi-title'>Tổng Số Đơn Hàng</div><div class='kpi-value' style='color:#1E3A8A;'>{total_orders:,}</div></div>", unsafe_allow_html=True)
 
 with kpi5:
-    disc_delta_color = "#DC2626" if avg_discount > 20 else "#16A34A"
+    disc_delta_color = "#DC2626" if avg_discount > 30 else "#16A34A"
     st.markdown(f"<div class='kpi-card'><div class='kpi-title'>Chiết Khấu Trung Bình</div><div class='kpi-value' style='color:{disc_delta_color};'>{avg_discount:.2f}%</div></div>", unsafe_allow_html=True)
 
 st.write("")
 
-# ---- TẦNG 2: PHÂN TÁCH BỐ CỤC BẰNG TABS ĐỂ TRÁNH RỐI MẮT KHI CHỤP ẢNH ----
+# ---- TẦNG 2: PHÂN TÁCH BỐ CỤC BẰNG TABS ĐỂ TRÁNH RỐI MẮT KHI CHÚNG TA CHỤP ẢNH ----
 tab_basic, tab_advanced = st.tabs(["📈 Phân Tích Khám Phá Cơ Bản", "🎯 Phân Tích Chuyên Sâu Nâng Cao"])
 
 # ==============================================================================
@@ -186,50 +186,63 @@ with tab_basic:
             labels={'Sales': 'Doanh Thu (USD)', 'Profit': 'Lợi Nhuận (USD)', 'Discount': 'Mức Chiết Khấu'},
             color_continuous_scale=px.colors.sequential.RdBu_r
         )
-        fig_scatter.add_hline(y=0, line_dash="dash", line_color="#EF4444", row="all", col="all", annotation_text="Điểm hòa vốn")
+        fig_scatter.add_hline(y=0, line_dash="dash", line_color="#EF4444", annotation_text="Điểm hòa vốn")
         st.plotly_chart(fig_scatter, use_container_width=True)
 
 # ==============================================================================
-# TAB 2: HỆ THỐNG BIỂU ĐỒ NÂNG CAO (ĐÃ CẢI TIẾN THEO FEEDBACK USER TESTING)
+# TAB 2: HỆ THỐNG BIỂU ĐỒ NÂNG CAO (THÊM BỘ LỌC CHẾ ĐỘ XEM ĐỂ TỐI ƯU KHÔNG GIAN)
 # ==============================================================================
 with tab_advanced:
     st.markdown("### Định Vị Rủi Ro Và Phân Cấp Lợi Nhuận")
-    col3, col4 = st.columns(2)
     
-    with col3:
-        # Biểu đồ nâng cao 1: Heatmap lợi nhuận trung bình (Cải tiến thang màu tương phản mạnh + hiện text trực tiếp)
-        if not df_filtered.empty:
-            pivot_heatmap = df_filtered.pivot_table(index='Region', columns='Category', values='Profit', aggfunc='mean').round(2)
-            
-            fig_heatmap = px.imshow(
-                pivot_heatmap,
-                text_auto='.2f', 
-                color_continuous_scale='RdYlGn',  # Thang màu Đỏ - Vàng - Xanh đúng cam kết báo cáo
-                title="Heatmap: Chỉ Số Lợi Nhuận Trung Bình Theo Vùng Và Ngành Hàng",
-                labels=dict(x="Danh Mục Sản Phẩm", y="Khu Vực", color="Lợi Nhuận TB ($)")
-            )
+    # Bộ lọc radio cho phép mở rộng không gian hiển thị cho biểu đồ lớn
+    view_option = st.radio(
+        "**Tùy chọn hiển thị biểu đồ nâng cao:**",
+        options=["Xem Heatmap (Mở rộng toàn màn hình)", "Xem Treemap (Mở rộng toàn màn hình)", "Xem song song cả hai biểu đồ"],
+        horizontal=True
+    )
+    
+    st.write("---")
+    
+    if not df_filtered.empty:
+        # Khởi tạo các cấu trúc đồ họa nâng cao
+        # 1. Heatmap lợi nhuận trung bình (Cải tiến dải màu RdYlGn và nhãn text tự động)
+        pivot_heatmap = df_filtered.pivot_table(index='Region', columns='Category', values='Profit', aggfunc='mean').round(2)
+        fig_heatmap = px.imshow(
+            pivot_heatmap,
+            text_auto='.2f', 
+            color_continuous_scale='RdYlGn',  # Thang màu Đỏ - Vàng - Xanh chuẩn cam kết báo cáo
+            title="Heatmap: Chỉ Số Lợi Nhuận Trung Bình Theo Vùng Và Ngành Hàng",
+            labels=dict(x="Danh Mục Sản Phẩm", y="Khu Vực", color="Lợi Nhuận TB ($)")
+        )
+        
+        # 2. Treemap cấu trúc phân cấp (Cải tiến Hover Tooltip chi tiết phục vụ Data Storytelling)
+        df_tree = df_filtered.groupby(['Category', 'Sub-Category']).agg({'Sales': 'sum', 'Profit': 'sum'}).reset_index()
+        fig_treemap = px.treemap(
+            df_tree, 
+            path=['Category', 'Sub-Category'], 
+            values='Sales',
+            color='Profit',
+            color_continuous_scale='RdYlGn',
+            title="Treemap: Cấu Trúc Phân Cấp Sản Phẩm Theo Quy Mô Doanh Thu & Lợi Nhuận"
+        )
+        fig_treemap.update_traces(
+            hovertemplate="<b>Danh mục:</b> %{label}<br><b>Tổng Doanh Thu (Diện tích):</b> $%{value:,.2f}<br><b>Tổng Lợi Nhuận (Màu sắc):</b> $%{color:,.2f}<extra></extra>"
+        )
+        
+        # Điều phối bố cục hiển thị dựa trên bộ lọc đã chọn
+        if view_option == "Xem Heatmap (Mở rộng toàn màn hình)":
             st.plotly_chart(fig_heatmap, use_container_width=True)
-        else:
-            st.info("Không có dữ liệu phù hợp với bộ lọc hiện tại để hiển thị Heatmap.")
             
-    with col4:
-        # Biểu đồ nâng cao 2: Treemap phân cấp Category -> Sub-Category (Cải tiến Hover Tooltip chi tiết)
-        if not df_filtered.empty:
-            df_tree = df_filtered.groupby(['Category', 'Sub-Category']).agg({'Sales': 'sum', 'Profit': 'sum'}).reset_index()
-            
-            fig_treemap = px.treemap(
-                df_tree, 
-                path=['Category', 'Sub-Category'], 
-                values='Sales',
-                color='Profit',
-                color_continuous_scale='RdYlGn',
-                title="Treemap: Cấu Trúc Phân Cấp Sản Phẩm Theo Quy Mô Doanh Thu & Lợi Nhuận"
-            )
-            
-            # Cải tiến cấu trúc hiển thị Hover Tooltip rõ ràng khi di chuột
-            fig_treemap.update_traces(
-                hovertemplate="<b>Danh mục:</b> %{label}<br><b>Tổng Doanh Thu (Diện tích):</b> $%{value:,.2f}<br><b>Tổng Lợi Nhuận (Màu sắc):</b> $%{color:,.2f}<extra></extra>"
-            )
+        elif view_option == "Xem Treemap (Mở rộng toàn màn hình)":
             st.plotly_chart(fig_treemap, use_container_width=True)
-        else:
-            st.info("Không có dữ liệu phù hợp với bộ lọc hiện tại để hiển thị Treemap.")
+            
+        else: # Chế độ hiển thị song song
+            col3, col4 = st.columns(2)
+            with col3:
+                st.plotly_chart(fig_heatmap, use_container_width=True)
+            with col4:
+                st.plotly_chart(fig_treemap, use_container_width=True)
+                
+    else:
+        st.info("Không có dữ liệu phù hợp với bộ lọc hiện tại để hiển thị phân tích nâng cao.")
