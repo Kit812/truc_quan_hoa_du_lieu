@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # ==========================================
-# 1. CẤU HÌNH GIAO DIỆN HỆ THỐNG (CHƯƠNG 4)
+# 1. CẤU HÌNH GIAO DIỆN HỆ THỐNG
 # ==========================================
 st.set_page_config(
     page_title="Superstore BI Platform",
@@ -84,45 +84,29 @@ def generate_perfect_superstore_data():
 df = generate_perfect_superstore_data()
 
 # ==========================================
-# 3. TRUNG TÂM ĐIỀU KHIỂN & BỘ LỌC TƯƠNG TÁC (SIDEBAR CHI SẺ CHUNG)
+# 3. TRUNG TÂM ĐIỀU KHIỂN & BỘ LỌC TOÀN CỤC (ONLY DATA FILTERS)
 # ==========================================
-st.sidebar.markdown("### 🎛️ BỘ LỌC HỆ THỐNG TOÀN CỤC")
+st.sidebar.markdown("### 🎛️ BỘ LỌC DỮ LIỆU TOÀN CỤC")
+st.sidebar.caption("Áp dụng đồng bộ lên số liệu của cả 3 phân hệ.")
 st.sidebar.markdown("---")
 
-# Nhóm 1: Bộ lọc dữ liệu kinh doanh (Mục 4.2.3)
-st.sidebar.markdown("**🔻 LỌC PHẠM VI DỮ LIỆU**")
 selected_region = st.sidebar.multiselect("🌍 Khu vực (Region):", options=sorted(df['Region'].unique()), default=sorted(df['Region'].unique()))
 selected_segment = st.sidebar.multiselect("👥 Phân khúc (Segment):", options=sorted(df['Segment'].unique()), default=sorted(df['Segment'].unique()))
 selected_category = st.sidebar.multiselect("📦 Danh mục sản phẩm (Category):", options=sorted(df['Category'].unique()), default=sorted(df['Category'].unique()))
 selected_ship = st.sidebar.multiselect("🚚 Vận chuyển (Ship Mode):", options=sorted(df['Ship Mode'].unique()), default=sorted(df['Ship Mode'].unique()))
 
-st.sidebar.markdown("---")
-
-# Nhóm 2: Bộ lọc cấu trúc hiển thị chuyên nghiệp (Đã chuyển từ Main vào Sidebar theo ý bạn)
-st.sidebar.markdown("**🔻 LỌC CẤU TRÚC GÓC NHÌN (PHÂN HỆ 2)**")
-view_mode = st.sidebar.selectbox(
-    "🖥️ Chọn biểu đồ cần tập trung:",
-    options=[
-        "📱 Xem song song tất cả biểu đồ", 
-        "📈 Phóng to Ma trận nhiệt (Heatmap)", 
-        "🌳 Phóng to Biểu đồ cây phân cấp (Treemap)",
-        "🎯 Phóng to Mô hình phân tán Chiết khấu (Scatter)"
-    ],
-    index=0
-)
-
-# Áp dụng bộ lọc dữ liệu cho biến filtered_df
+# Áp dụng bộ lọc dữ liệu
 filtered_df = df[
     (df['Region'].isin(selected_region)) & (df['Segment'].isin(selected_segment)) &
     (df['Category'].isin(selected_category)) & (df['Ship Mode'].isin(selected_ship))
 ]
 
 st.sidebar.markdown("---")
-if st.sidebar.button("🔄 Khởi động lại toàn bộ bộ lọc"):
+if st.sidebar.button("🔄 Khởi động lại bộ lọc"):
     st.rerun()
 
 # ==========================================
-# 4. HỆ THỐNG PHÂN PHÁP TAB CHUYÊN NGHIỆP
+# 4. HỆ THỐNG PHÂN TÁCH PHÂN HỆ (TABS)
 # ==========================================
 tab_kpi, tab_diagnostic, tab_audit = st.tabs([
     "📈 Phân Hệ 1: Hiệu Suất Tổng Quan", 
@@ -131,7 +115,7 @@ tab_kpi, tab_diagnostic, tab_audit = st.tabs([
 ])
 
 # ------------------------------------------
-# TAB 1: HIỆU SUẤT TỔNG QUAN (DESCRIPTIVE INSIGHTS)
+# TAB 1: HIỆU SUẤT TỔNG QUAN
 # ------------------------------------------
 with tab_kpi:
     st.markdown("#### 📌 Báo cáo Sức khỏe Doanh nghiệp (Thống kê Mô tả)")
@@ -171,66 +155,81 @@ with tab_kpi:
     st.plotly_chart(fig_line, use_container_width=True)
 
 # ------------------------------------------
-# TAB 2: CHẨN ĐOÁN & PHÁT HIỆN RỦI RO (ĐIỀU HƯỚNG THEO BỘ LỌC SIDEBAR)
+# TAB 2: CHẨN ĐOÁN & PHÁT HIỆN RỦI RO (BỘ LỌC ĐẶT NỘI BỘ TRONG TAB)
 # ------------------------------------------
 with tab_diagnostic:
     st.markdown("#### 📌 Phân tích chẩn đoán chuyên sâu nguyên nhân thua lỗ")
-    st.caption("Hệ thống tự động thay đổi cấu trúc không gian dựa trên Bộ lọc góc nhìn bạn đã chọn ở thanh Sidebar bên trái.")
     
-    # Khởi tạo đối tượng biểu đồ nâng cao phục vụ hiển thị động (Mục 3.5)
-    # 1. Định nghĩa Heatmap (Cải tiến 5.2.2)
+    # 🌟 CẢI TIẾN QUYẾT ĐỊNH: Đặt bộ lọc góc nhìn nằm gọn gọn ngay đầu Phân hệ 2 bằng st.selectbox
+    col_filter_1, col_filter_2 = st.columns([1, 2])
+    with col_filter_1:
+        view_mode = st.selectbox(
+            "🖥️ **Bộ lọc cấu trúc không gian hiển thị (Phân hệ 2):**",
+            options=[
+                "📱 Hiển thị thu gọn (Xem song song tất cả)", 
+                "📈 Phóng to Ma trận nhiệt (Heatmap)", 
+                "🌳 Phóng to Biểu đồ cây phân cấp (Treemap)",
+                "🎯 Phóng to Mô hình phân tán Chiết khấu (Scatter)"
+            ],
+            index=0
+        )
+    
+    st.markdown("---")
+    
+    # Khởi tạo các biểu đồ nâng cao phục vụ logic render động
+    # 1. Heatmap
     heat_data = filtered_df.groupby(['Region', 'Category'])['Profit'].mean().reset_index()
     heat_pivot = heat_data.pivot(index='Region', columns='Category', values='Profit')
     fig_heatmap = px.imshow(heat_pivot, color_continuous_scale='RdYlGn', color_continuous_midpoint=0, text_auto=".1f")
     
-    # 2. Định nghĩa Treemap (Cải tiến 5.2.1)
+    # 2. Treemap
     fig_treemap = px.treemap(filtered_df, path=['Category', 'Sub-Category'], values='Sales', color='Profit', color_continuous_scale='RdYlGn', color_continuous_midpoint=0)
     fig_treemap.update_traces(hovertemplate="<b>Phân loại:</b> %{label}<br><b>Doanh thu:</b> $%{value:,.2f}<br><b>Lợi nhuận:</b> $%{color:,.2f}<extra></extra>")
     
-    # 3. Định nghĩa Scatter Plot (Mục 3.4.4)
+    # 3. Scatter Plot
     fig_scatter = px.scatter(filtered_df, x='Sales', y='Profit', color='Discount', color_continuous_scale='RdYlGn', opacity=0.5)
     fig_scatter.add_hline(y=0, line_dash="dash", line_color="black")
 
-    # THỰC THI CẤU TRÚC HIỂN THỊ DỰA TRÊN BỘ LỌC CỦA SIDEBAR
-    if view_mode == "📱 Xem song song tất cả biểu đồ":
+    # LOGIC ĐIỀU HƯỚNG HIỂN THỊ CÔ LẬP NỘI BỘ
+    if view_mode == "📱 Hiển thị thu gọn (Xem song song tất cả)":
         col2_1, col2_2 = st.columns(2)
         with col2_1:
             st.markdown("##### Ma trận nhiệt (Heatmap): Hiệu suất sinh lời trung bình")
-            fig_heatmap.update_layout(height=400)
+            fig_heatmap.update_layout(height=380)
             st.plotly_chart(fig_heatmap, use_container_width=True)
         with col2_2:
-            st.markdown("##### Biểu đồ phân cấp Cây (Treemap): Cơ cấu rủi ro theo Danh mục phụ")
-            fig_treemap.update_layout(height=400)
+            st.markdown("##### Biểu đồ phân cấp Cây (Treemap): Cơ cấu rủi ro")
+            fig_treemap.update_layout(height=380)
             st.plotly_chart(fig_treemap, use_container_width=True)
             
         st.markdown("---")
         st.markdown("##### Mô hình phân tán: Tác động biên của chính sách Chiết khấu (Discount) đến Lợi nhuận (Profit)")
-        fig_scatter.update_layout(height=450)
+        fig_scatter.update_layout(height=400)
         st.plotly_chart(fig_scatter, use_container_width=True)
         
     elif view_mode == "📈 Phóng to Ma trận nhiệt (Heatmap)":
-        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO] Ma trận nhiệt (Heatmap): Hiệu suất sinh lời trung bình (Region vs Category)")
-        fig_heatmap.update_layout(height=650) # Kéo giãn chiều cao tối đa khi phóng to
+        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO RỘNG MÀN HÌNH] Ma trận nhiệt (Heatmap): Hiệu suất sinh lời trung bình")
+        fig_heatmap.update_layout(height=650) # Tối ưu diện tích chữ cực to rõ
         st.plotly_chart(fig_heatmap, use_container_width=True)
-        st.info("💡 **Gợi ý phân tích:** Chế độ phóng to giúp bạn nhìn rõ các giá trị số Lợi nhuận trung bình trên từng ô[cite: 495]. Hãy chú ý vùng giao thoa giữa miền **Central** và danh mục **Furniture** đang mang giá trị âm sâu nhất[cite: 389].")
+        st.info("💡 **Gợi ý phân tích:** Ô giao thoa giữa miền **Central** và danh mục **Furniture** đang mang giá trị âm sâu nhất do chính sách chiết khấu sai lầm.")
         
     elif view_mode == "🌳 Phóng to Biểu đồ cây phân cấp (Treemap)":
-        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO] Biểu đồ phân cấp Cây (Treemap): Phân tích lát cắt Doanh thu & Lợi nhuận")
+        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO RỘNG MÀN HÌNH] Biểu đồ phân cấp Cây (Treemap): Phân tích lát cắt Doanh thu & Lợi nhuận")
         fig_treemap.update_layout(height=650)
         st.plotly_chart(fig_treemap, use_container_width=True)
-        st.info("💡 **Gợi ý phân tích:** Kích thước ô đại diện cho Doanh thu (Sales)[cite: 400]. Ô sản phẩm **Tables** thuộc Furniture có diện tích lớn nhưng nhuộm sắc đỏ đậm, chứng tỏ sản phẩm này đang thua lỗ nặng[cite: 403].")
+        st.info("💡 **Gợi ý phân tích:** Kích thước ô đại diện cho Doanh thu. Nhóm sản phẩm **Tables** tuy doanh số cao nhưng bị sắc đỏ bao phủ hoàn toàn.")
         
     elif view_mode == "🎯 Phóng to Mô hình phân tán Chiết khấu (Scatter)":
-        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO] Mô hình phân tán: Tác động biên của chính sách Chiết khấu")
+        st.markdown("##### 📐 [CHẾ ĐỘ PHÓNG TO RỘNG MÀN HÌNH] Mô hình phân tán: Tác động biên của chính sách Chiết khấu")
         fig_scatter.update_layout(height=650)
         st.plotly_chart(fig_scatter, use_container_width=True)
 
 # ------------------------------------------
-# TAB 3: ĐỐI SOÁT DỮ LIỆU GIAO DỊCH CHI TIẾT (DATA AUDIT LOG)
+# TAB 3: ĐỐI SOÁT DỮ LIỆU GIAO DỊCH CHI TIẾT
 # ------------------------------------------
 with tab_audit:
     st.markdown("#### 📌 Nhật ký đối soát dữ liệu giao dịch chi tiết (Data Audit Log)")
-    st.caption("Bảng dữ liệu thô đã qua tiền xử lý, sắp xếp tự động từ các giao dịch rủi ro/gây lỗ nặng nhất lên đầu để phục vụ việc truy vết đơn hàng[cite: 301].")
+    st.caption("Bảng dữ liệu thô đã qua tiền xử lý, sắp xếp tự động từ các giao dịch rủi ro/gây lỗ nặng nhất lên đầu để phục vụ việc truy vết đơn hàng.")
     
     st.dataframe(
         filtered_df.sort_values(by="Profit", ascending=True),
@@ -243,4 +242,4 @@ with tab_audit:
     )
     
     st.markdown("---")
-    st.info("💡 **Khuyến nghị chiến lược cho Hội đồng quản trị (Mục 5.5):** Dữ liệu chẩn đoán tại **Tab 2** chứng minh chính sách chiết khấu quá tay (Discount > 40%) là nguyên nhân chính đẩy nhóm mặt hàng Tables và Bookcases rơi vào vùng báo động đỏ (Thua lỗ ròng nặng)[cite: 375, 403]. Khuyến nghị thắt chặt biên độ chiết khấu tối đa xuống mức 15% tại khu vực Central và South.")
+    st.info("💡 **Khuyến nghị chiến lược cho Hội đồng quản trị (Mục 5.5):** Dữ liệu chẩn đoán tại **Tab 2** chứng minh chính sách chiết khấu quá tay (Discount > 40%) là nguyên nhân chính đẩy nhóm mặt hàng Tables và Bookcases rơi vào vùng báo động đỏ (Thua lỗ ròng nặng). Khuyến nghị thắt chặt biên độ chiết khấu tối đa xuống mức 15% tại khu vực Central và South.")
