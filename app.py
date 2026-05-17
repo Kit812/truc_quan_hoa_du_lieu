@@ -78,6 +78,10 @@ segment_sel = st.sidebar.multiselect("Phân khúc (Segment)", options=sorted(df[
 category_sel = st.sidebar.multiselect("Danh mục (Category)", options=sorted(df['Category'].unique()), default=df['Category'].unique())
 ship_sel = st.sidebar.multiselect("Phương thức vận chuyển (Ship Mode)", options=sorted(df['Ship Mode'].unique()), default=df['Ship Mode'].unique())
 
+# Nút Reset bộ lọc ở phía bên trái thanh Sidebar
+if st.sidebar.button("Reset Bộ Lọc", use_container_width=True):
+    st.rerun()
+
 # Áp dụng bộ lọc động vào dữ liệu
 df_filtered = df[
     (df['Region'].isin(region_sel)) &
