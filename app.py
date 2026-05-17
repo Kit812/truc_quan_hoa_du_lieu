@@ -231,10 +231,10 @@ with tab_advanced:
         )
         
         # Điều phối bố cục hiển thị dựa trên bộ lọc đã chọn
-        if view_option == "Xem Heatmap (Mở rộng toàn màn hình)":
+        if view_option == "Xem Heatmap":
             st.plotly_chart(fig_heatmap, use_container_width=True)
             
-        elif view_option == "Xem Treemap (Mở rộng toàn màn hình)":
+        elif view_option == "Xem Treemap":
             st.plotly_chart(fig_treemap, use_container_width=True)
             
         else: # Chế độ hiển thị song song
