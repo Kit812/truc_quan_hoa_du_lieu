@@ -194,7 +194,7 @@ with tab_basic:
         st.plotly_chart(fig_scatter, use_container_width=True)
 
 # ==============================================================================
-# TAB 2: HỆ THỐNG BIỂU ĐỒ NÂNG CAO (THÊM BỘ LỌC CHẾ ĐỘ XEM ĐỂ TỐI ƯU KHÔNG GIAN)
+# TAB 2: HỆ THỐNG BIỂU ĐỒ NÂNG CAO (ĐÃ THAY ĐỔI SCALE CHIỀU CAO THEO CHẾ ĐỘ XEM)
 # ==============================================================================
 with tab_advanced:
     st.markdown("### Định Vị Rủi Ro Và Phân Cấp Lợi Nhuận")
@@ -209,39 +209,50 @@ with tab_advanced:
     st.write("---")
     
     if not df_filtered.empty:
-        # Khởi tạo các cấu trúc đồ họa nâng cao
-        # 1. Heatmap lợi nhuận trung bình (Cải tiến dải màu RdYlGn và nhãn text tự động)
+        # Khởi tạo ma trận dữ liệu nâng cao
         pivot_heatmap = df_filtered.pivot_table(index='Region', columns='Category', values='Profit', aggfunc='mean').round(2)
-        fig_heatmap = px.imshow(
-            pivot_heatmap,
-            text_auto='.2f', 
-            color_continuous_scale='RdYlGn',  # Thang màu Đỏ - Vàng - Xanh chuẩn cam kết báo cáo
-            title="Heatmap: Chỉ Số Lợi Nhuận Trung Bình Theo Vùng Và Ngành Hàng",
-            labels=dict(x="Danh Mục Sản Phẩm", y="Khu Vực", color="Lợi Nhuận TB ($)")
-        )
-        
-        # 2. Treemap cấu trúc phân cấp (Cải tiến Hover Tooltip chi tiết phục vụ Data Storytelling)
         df_tree = df_filtered.groupby(['Category', 'Sub-Category']).agg({'Sales': 'sum', 'Profit': 'sum'}).reset_index()
-        fig_treemap = px.treemap(
-            df_tree, 
-            path=['Category', 'Sub-Category'], 
-            values='Sales',
-            color='Profit',
-            color_continuous_scale='RdYlGn',
-            title="Treemap: Cấu Trúc Phân Cấp Sản Phẩm Theo Quy Mô Doanh Thu & Lợi Nhuận"
-        )
-        fig_treemap.update_traces(
-            hovertemplate="<b>Danh mục:</b> %{label}<br><b>Tổng Doanh Thu (Diện tích):</b> $%{value:,.2f}<br><b>Tổng Lợi Nhuận (Màu sắc):</b> $%{color:,.2f}<extra></extra>"
-        )
         
-        # Điều phối bố cục hiển thị dựa trên bộ lọc đã chọn
+        # Điều phối bố cục hiển thị và SCALE kích thước tương ứng dựa trên bộ lọc đã chọn
         if view_option == "Xem Heatmap":
+            fig_heatmap = px.imshow(
+                pivot_heatmap, text_auto='.2f', color_continuous_scale='RdYlGn',  
+                title="Heatmap: Chỉ Số Lợi Nhuận Trung Bình Theo Vùng Và Ngành Hàng",
+                labels=dict(x="Danh Mục Sản Phẩm", y="Khu Vực", color="Lợi Nhuận TB ($)"),
+                height=600 # Đẩy cao lên 600px để ô to, thoáng khi xem mở rộng
+            )
             st.plotly_chart(fig_heatmap, use_container_width=True)
             
         elif view_option == "Xem Treemap":
+            fig_treemap = px.treemap(
+                df_tree, path=['Category', 'Sub-Category'], values='Sales', color='Profit',
+                color_continuous_scale='RdYlGn',
+                title="Treemap: Cấu Trúc Phân Cấp Sản Phẩm Theo Quy Mô Doanh Thu & Lợi Nhuận",
+                height=720 # Đẩy cao hẳn lên 720px để phân bố đủ không gian cho các Sub-Category nhỏ hiển thị rõ nhãn chữ
+            )
+            fig_treemap.update_traces(
+                hovertemplate="<b>Danh mục:</b> %{label}<br><b>Tổng Doanh Thu (Diện tích):</b> $%{value:,.2f}<br><b>Tổng Lợi Nhuận (Màu sắc):</b> $%{color:,.2f}<extra></extra>"
+            )
             st.plotly_chart(fig_treemap, use_container_width=True)
             
         else: # Chế độ hiển thị song song
+            fig_heatmap = px.imshow(
+                pivot_heatmap, text_auto='.2f', color_continuous_scale='RdYlGn',  
+                title="Heatmap: Chỉ Số Lợi Nhuận Trung Bình Theo Vùng Và Ngành Hàng",
+                labels=dict(x="Danh Mục Sản Phẩm", y="Khu Vực", color="Lợi Nhuận TB ($)"),
+                height=500 # Để chiều cao vừa phải khi đứng cạnh nhau
+            )
+            
+            fig_treemap = px.treemap(
+                df_tree, path=['Category', 'Sub-Category'], values='Sales', color='Profit',
+                color_continuous_scale='RdYlGn',
+                title="Treemap: Cấu Trúc Phân Cấp Sản Phẩm Theo Quy Mô Doanh Thu & Lợi Nhuận",
+                height=500 # Đồng bộ chiều cao với Heatmap
+            )
+            fig_treemap.update_traces(
+                hovertemplate="<b>Danh mục:</b> %{label}<br><b>Tổng Doanh Thu (Diện tích):</b> $%{value:,.2f}<br><b>Tổng Lợi Nhuận (Màu sắc):</b> $%{color:,.2f}<extra></extra>"
+            )
+            
             col3, col4 = st.columns(2)
             with col3:
                 st.plotly_chart(fig_heatmap, use_container_width=True)
