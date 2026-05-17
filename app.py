@@ -198,7 +198,7 @@ with tab_advanced:
     # Bộ lọc radio cho phép mở rộng không gian hiển thị cho biểu đồ lớn
     view_option = st.radio(
         "**Tùy chọn hiển thị biểu đồ nâng cao:**",
-        options=["Xem Heatmap (Mở rộng toàn màn hình)", "Xem Treemap (Mở rộng toàn màn hình)", "Xem song song cả hai biểu đồ"],
+        options=["Xem Heatmap", "Xem Treemap", "Xem song song Heatmap và Treemap"],
         horizontal=True
     )
     
